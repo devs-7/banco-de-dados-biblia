@@ -4,9 +4,12 @@ import sqlite3
 from textwrap import dedent
 from typing import List
 
+nome_arquivo = input('Nome do arquivo: ')
+sigla_versao = input("Sigla da versão: ").upper()
+
 versos: List[dict] = []
 
-with open(input('Nome do arquivo: '), encoding='utf-8') as f:
+with open(nome_arquivo, encoding='utf-8') as f:
     linhas = f.read().split('\n')
     for linha in linhas:
         liv, cap, ver, texto = re.findall(
@@ -26,14 +29,18 @@ siglas = [
     '2pe', '1jo', '2jo', '3jo', 'hb', 'tg', 'jd', 'ap'
 ]
 
-sql = dedent(f"""
-    INSERT INTO versos (
-        id_versao, id_livro, capitulo, versiculo, texto
-    ) VALUES ({input("id da versão: ")}, %s, %s, %s, '%s')
-""")
 
 connection = sqlite3.connect('biblia.db')
 cursor = connection.cursor()
+cursor.execute("INSERT INTO versoes(sigla) VALUES('%s')" % sigla_versao)
+cursor.execute("SELECT id FROM versoes ORDER BY id DESC LIMIT 1")
+id_versao, = cursor.fetchone()
+
+sql = dedent(f"""
+    INSERT INTO versos (
+        id_versao, id_livro, capitulo, versiculo, texto
+    ) VALUES ({id_versao}, %s, %s, %s, '%s')
+""")
 
 try:
     for verso in versos:
